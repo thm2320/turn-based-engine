@@ -54,7 +54,7 @@ export class FourChainChess extends TurnBasedGame{
   };
 
   isWin = () => {
-    return false
+    return false;
   };
 
   printBoard = () => {
@@ -66,18 +66,4 @@ export class FourChainChess extends TurnBasedGame{
       console.log(line);
     }
   };
-
-  setUpListeners = () => {
-    this.players.forEach( (player ) => {
-      player.socket.on('play', (steps) => {
-        console.log(`${player.socket.id} run ${steps}`);
-        try{
-          this.play(player, steps)
-        }
-        catch(e: any) {
-          console.log(e);
-        }
-      });
-    })
-  }
 }

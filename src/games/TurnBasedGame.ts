@@ -8,5 +8,4 @@ export abstract class TurnBasedGame {
   abstract play(player: Player, step: any): void;
   abstract isWin(): boolean;
   abstract printBoard(): void;
-  abstract setUpListeners(): void;
 }

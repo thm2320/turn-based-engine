@@ -21,7 +21,7 @@ export class Room {
     this.players.push(player);
     this.game.addPlayer(player)
     if (this.game.canStart()){
-      this.game.setUpListeners();
+      this.setUpListeners();
       this.game.status = 'playing';
     }
     return;
@@ -29,5 +29,22 @@ export class Room {
 
   isFull = () => {
     return this.players.length >= this.limit
+  }
+
+  setUpListeners = () => {
+    this.players.forEach( (player ) => {
+      player.socket.on('play', (steps) => {
+        console.log(`${player.socket.id} run ${steps}`);
+        try{
+          this.game.play(player, steps)
+          if (this.game.isWin()){
+            console.log(`${player.socket.id} won!`)
+          }
+        }
+        catch(e: any) {
+          console.log(e);
+        }
+      });
+    })
   }
 }
