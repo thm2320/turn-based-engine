@@ -51,7 +51,6 @@ export class FourChainChess extends TurnBasedGame{
     } else {
       throw new Error(`It is not turn for player ${player.socket.id}`)
     }
-
   };
 
   isWin = () => {
@@ -72,7 +71,12 @@ export class FourChainChess extends TurnBasedGame{
     this.players.forEach( (player ) => {
       player.socket.on('play', (steps) => {
         console.log(`${player.socket.id} run ${steps}`);
-        this.play(player, steps)
+        try{
+          this.play(player, steps)
+        }
+        catch(e: any) {
+          console.log(e);
+        }
       });
     })
   }
