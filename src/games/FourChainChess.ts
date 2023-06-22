@@ -1,12 +1,12 @@
-import { Player } from "../socket/Player";
-import { TurnBasedGame } from "./TurnBasedGame";
+import { Player } from '../socket/Player';
+import { TurnBasedGame } from './TurnBasedGame';
 
 enum Chess {
   X = 0,
   O,
 }
 
-export class FourChainChess extends TurnBasedGame{
+export class FourChainChess extends TurnBasedGame {
   readonly MIN_PLAYER = 2;
   readonly MAX_PLAYER = 2;
   readonly BOARD_WIDTH = 7;
@@ -32,7 +32,7 @@ export class FourChainChess extends TurnBasedGame{
     if (this.status === 'waiting') {
       this.players.push(player);
     } else {
-      throw new Error('Now allowed to join game')
+      throw new Error('Now allowed to join game');
     }
   }
 
@@ -43,17 +43,99 @@ export class FourChainChess extends TurnBasedGame{
     );
   }
 
-  play = (player:Player, column: number) => {
+  play = (player: Player, column: number) => {
     if (player === this.players[this.playerTurn]) {
       this.gameboard[column].push(Chess[this.playerTurn]);
       this.printBoard();
-      this.playerTurn = (this.playerTurn + 1) % this.players.length
+      this.playerTurn = (this.playerTurn + 1) % this.players.length;
+      let row = this.gameboard[column].length - 1;
+      if (this.isWin(column, row)) {
+      }
     } else {
-      throw new Error(`It is not turn for player ${player.socket.id}`)
+      throw new Error(`It is not turn for player ${player.socket.id}`);
     }
   };
 
-  isWin = () => {
+  isWin = (x: number, y: number) => {
+    let lastStepChess = this.gameboard[x][y];
+    console.log(`lastStepChess = ${lastStepChess}`);
+    
+    let connectedNum = 0;
+    
+    //honizontal check
+    for (let n = -3; n <= 3; n++) {
+      if (this.gameboard[x+n] && this.gameboard[x + n][y] === lastStepChess) {
+        connectedNum++;
+      } else {
+        connectedNum = 0;
+      }
+      if (connectedNum >= 4) {
+        break;
+      }
+      console.log(`connectedNum = ${connectedNum}`)
+    }
+    if (connectedNum >= 4) {
+      this.status = 'finished';
+      return true;
+    }
+
+    connectedNum = 0;
+    //diagonal up check
+    for (let n = -3; n <= 3; n++) {
+      if (this.gameboard[x+n] && this.gameboard[x + n][y + n] === lastStepChess) {
+        connectedNum++;
+      } else {
+        connectedNum = 0;
+      }
+      if (connectedNum >= 4) {
+        break;
+      }
+      console.log(`connectedNum = ${connectedNum}`)
+    }
+  
+    if (connectedNum >= 4) {
+      this.status = 'finished';
+      return true;
+    }
+    
+    connectedNum = 0;
+    //diagonal down check
+    for (let n = -3; n <= 3; n++) {
+      if (this.gameboard[x+n] && this.gameboard[x + n][y - n] === lastStepChess) {
+        connectedNum++;
+      } else {
+        connectedNum = 0;
+      }
+      if (connectedNum >= 4) {
+        break;
+      }
+      console.log(`connectedNum = ${connectedNum}`)
+    }
+  
+    if (connectedNum >= 4) {
+      this.status = 'finished';
+      return true;
+    }
+
+    connectedNum = 0;
+    //vertical check
+    for (let n = -3; n <= 0; n++) {
+      if (this.gameboard[x] && this.gameboard[x][y + n] === lastStepChess) {
+        connectedNum++;
+      } else {
+        connectedNum = 0;
+      }
+      if (connectedNum >= 4) {
+        break;
+      }
+      console.log(`connectedNum = ${connectedNum}`)
+    }
+
+    if (connectedNum >= 4) {
+      this.status = 'finished';
+      return true;
+    }
+
     return false;
   };
 
