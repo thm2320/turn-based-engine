@@ -37,7 +37,7 @@ export class Room {
         console.log(`${player.socket.id} run ${steps}`);
         try{
           this.game.play(player, steps)
-          if (this.game.isWin()){
+          if (this.game.status === 'finished'){
             console.log(`${player.socket.id} won!`)
           }
         }
