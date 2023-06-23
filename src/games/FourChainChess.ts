@@ -71,7 +71,11 @@ export class FourChainChess extends TurnBasedGame {
   isWin = (x: number, y: number) => {
     let lastStepChess = this.gameboard[x][y];
     console.log(`lastStepChess = ${lastStepChess}`);
-    let getConnectedNum = (chess: string, prevLocation: Coordinate, direction: Coordinate) : number => {
+    let getConnectedNum = (
+      chess: string,
+      prevLocation: Coordinate,
+      direction: Coordinate
+    ): number => {
       let x = prevLocation.x + direction.x;
       let y = prevLocation.y + direction.y;
       if (
@@ -79,12 +83,13 @@ export class FourChainChess extends TurnBasedGame {
         x >= this.BOARD_WIDTH ||
         y < 0 ||
         y >= this.BOARD_HEIGHT ||
+        !this.gameboard[x] ||
         this.gameboard[x][y] !== chess
       ) {
         return 0;
       }
-      return 1 + getConnectedNum(chess, {x,y}, direction);
-    }
+      return 1 + getConnectedNum(chess, { x, y }, direction);
+    };
 
     //honizontal check
     let horizontalNum = getConnectedNum(
