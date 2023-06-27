@@ -9,7 +9,12 @@ export class SocketServer {
   private rooms: Room[] = [];
 
   constructor(httpServer: HttpServer) {
-    this.io = new Server(httpServer);
+    this.io = new Server(httpServer,{
+      cors: {
+        origin: "http://localhost:3001",
+        credentials: true
+      }
+    });
   }
 
   init(): void {
