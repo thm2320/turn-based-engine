@@ -6,13 +6,6 @@ enum Chess {
   X,
 }
 
-enum Direction {
-  VERTICAL,
-  HORIZONTAL,
-  DIAGONAL_UP,
-  DIAGONAL_DOWN,
-} 
-
 type Coordinate = {
   x: number,
   y: number,
