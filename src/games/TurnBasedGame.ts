@@ -7,7 +7,7 @@ export abstract class TurnBasedGame {
 
   abstract addPlayer(player: Player): void;
   abstract canStart(): boolean;
-  abstract play(player: Player, step: any): void;
+  abstract move(player: Player, step: any): void;
   // abstract isWin(): boolean;
   abstract printBoard(): void;
 }

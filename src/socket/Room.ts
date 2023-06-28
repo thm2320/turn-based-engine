@@ -47,14 +47,14 @@ export class Room {
 
   setUpListeners = () => {
     this.players.forEach((player) => {
-      player.socket.on('play', (steps) => {
-        console.log(`${player.socket.id} run ${steps}`);
+      player.socket.on('move', (steps) => {
+        console.log(`${player.socket.id} move step ${steps}`);
         try {
-          this.game.play(player, steps);
+          this.game.move(player, steps);
           if (this.game.status === 'finished') {
             console.log(`${player.socket.id} won!`);
           }
-          this.io.in(this.name).emit('update', {player: player.socket.id, step: steps})
+          this.io.in(this.name).emit('update_move', {player: player.socket.id, step: steps, isFinished: this.game.status === 'finished'})
         } catch (e: any) {
           console.log(e);
         }

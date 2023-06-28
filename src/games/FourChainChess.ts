@@ -52,7 +52,7 @@ export class FourChainChess extends TurnBasedGame {
     );
   }
 
-  play = (player: Player, column: number) => {
+  move = (player: Player, column: number) => {
     if (player === this.players[this.playerTurn]) {
       this.gameboard[column].push(Chess[this.playerTurn]);
       this.printBoard();
