@@ -32,6 +32,11 @@ export class FourChainChess extends TurnBasedGame {
     this.printBoard();
   }
 
+  cleanUp(): void {
+    this.players = [];
+    this.gameboard = [];
+  }
+
   addPlayer(player: Player): void {
     if (this.status === 'waiting') {
       this.players.push(player);
