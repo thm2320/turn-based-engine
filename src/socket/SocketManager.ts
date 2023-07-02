@@ -4,7 +4,7 @@ import { Room } from './Room';
 import { FourChainChess } from '../games/FourChainChess';
 import { Player } from './Player';
 
-export class SocketServer {
+export class SocketManager {
   private io: Server;
   private rooms: Map<string, Room> = new Map();
 
