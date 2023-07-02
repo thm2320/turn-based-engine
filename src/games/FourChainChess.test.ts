@@ -1,4 +1,4 @@
-import { beforeAll, describe, expect, test } from '@jest/globals';
+import { beforeAll, afterAll, describe, expect, test } from '@jest/globals';
 import { FourChainChess } from './FourChainChess';
 import { Player } from '../socket/Player';
 import { Server } from 'socket.io';
@@ -23,6 +23,7 @@ describe('FourChainChess Class', () => {
       const port =
         typeof address === 'object' && address !== null ? address.port : '3000';
 
+      clientIo(`http://localhost:${port}`, ioOptions);
       let clientSocket = clientIo(`http://localhost:${port}`, ioOptions);
       io.on('connection', (socket) => {
         if (playerA === undefined) {
@@ -30,16 +31,17 @@ describe('FourChainChess Class', () => {
         } else {
           playerB = new Player(socket);
         }
-        console.log(playerA);
-        console.log(playerB);
+      });
+      clientSocket.on('connect', () => {
         if (playerA !== undefined && playerB !== undefined) {
           done();
         }
       });
-      clientSocket.on('connect', () => {
-        clientIo(`http://localhost:${port}`, ioOptions);
-      });
     });
+  });
+
+  afterAll((done) => {
+    setTimeout(done, 500);
   });
 
   test('Check win for horizontal left only', () => {
