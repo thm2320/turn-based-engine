@@ -36,14 +36,21 @@ export class Room {
     return;
   };
 
+  removePlayer = (player: Player): void => {
+    const removeIndex = this.players.indexOf(player);
+    if (removeIndex > -1) {
+      this.players.splice(this.players.indexOf(player), 1);
+    }
+  };
+
   isFull = () => {
     return this.players.length >= this.limit;
   };
 
   sendMessage = (msg: string) => {
-    console.log(`room sends msg ${msg}`)
+    console.log(`room sends msg ${msg}`);
     this.io.in(this.name).emit('message', msg);
-  }
+  };
 
   setUpListeners = () => {
     this.players.forEach((player) => {

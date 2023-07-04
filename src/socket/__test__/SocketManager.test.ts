@@ -14,6 +14,7 @@ describe('SockerManager', () => {
   let player2: Player;
   let clientSocket1: ClientSocket;
   let clientSocket2: ClientSocket;
+  const testRoomName = 'Test-Room';
   const ioOptions = {
     transports: ['websocket'],
     forceNew: true,
@@ -58,14 +59,15 @@ describe('SockerManager', () => {
   test('Player1 open room "Test-Room"', (done) => {
     clientSocket1.emit(
       SocketEvents.OpenRoom,
-      { roomName: 'Test-Room' },
+      { roomName: testRoomName },
       (response: any) => {
-        console.log(response);
-        // socketManager.openRoom(player1.socket.id, 'Test-Room');
+        // socketManager.openRoom(player1.socket.id, testRoomName);
         const roomMap = socketManager.getRooms();
         expect(roomMap.size).toBe(1);
         const roomName = roomMap.keys().next().value;
-        expect(roomName).toBe('Test-Room');
+        expect(roomName).toBe(testRoomName);
+
+        const ioRoomMap = io.of('/').adapter.rooms;
         done();
       }
     );
@@ -74,16 +76,16 @@ describe('SockerManager', () => {
   test('Player2 Join Room "Test-Room"', (done) => {
     clientSocket2.emit(
       SocketEvents.JoinRoom,
-      { roomName: 'Test-Room' },
+      { roomName: testRoomName },
       (response: any) => {
-        console.log(response);
-        // socketManager.joinRoom(player2.socket.id, 'Test-Room');
+        // console.log(response);
+        // socketManager.joinRoom(player2.socket.id, testRoomName);
         const roomMap = socketManager.getRooms();
         expect(roomMap.size).toBe(1);
         const roomName = roomMap.keys().next().value;
-        expect(roomName).toBe('Test-Room');
-        const socketRoom = io.of('/').adapter.rooms.get('Test-Room');
-        console.log(socketRoom);
+        expect(roomName).toBe(testRoomName);
+        const socketRoom = io.of('/').adapter.rooms.get(testRoomName);
+        // console.log(socketRoom);
         expect(socketRoom?.size).toBe(2);
         done();
       }
@@ -94,8 +96,40 @@ describe('SockerManager', () => {
     clientSocket1.emit(SocketEvents.ListRooms, {}, (response: any) => {
       const { rooms } = response;
       expect(rooms.length).toBe(1);
-      expect(rooms[0]).toBe('Test-Room')
+      expect(rooms[0]).toBe(testRoomName);
       done();
     });
+  });
+
+  test('Player1 leaves Room "Test-Room"', (done) => {
+    clientSocket1.emit(
+      SocketEvents.LeaveRoom,
+      { roomName: testRoomName },
+      (response: any) => {
+        const ioRoomMap = io.of('/').adapter.rooms;
+        const roomSockets = ioRoomMap.get(testRoomName);
+        expect(roomSockets?.size).toBe(1);
+
+        const roomMap = socketManager.getRooms();
+        expect(roomMap.size).toBe(1);
+        done();
+      }
+    );
+  });
+
+  test('Player2 leaves Room "Test-Room" 2', (done) => {
+    clientSocket2.emit(
+      SocketEvents.LeaveRoom,
+      { roomName: testRoomName },
+      (response: any) => {
+        const ioRoomMap = io.of('/').adapter.rooms;
+        const roomSockets = ioRoomMap.get(testRoomName);
+        expect(roomSockets).toBe(undefined);
+
+        const roomMap = socketManager.getRooms();
+        expect(roomMap.size).toBe(0);
+        done();
+      }
+    );
   });
 });

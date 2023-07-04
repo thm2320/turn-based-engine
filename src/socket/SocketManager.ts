@@ -34,6 +34,7 @@ export class SocketManager {
       socket.on(SocketEvents.OpenRoom, (evtMsg, callback) => {
         const { roomName } = evtMsg;
         this.openRoom(socket, roomName);
+        console.log(this.io.of('/').adapter.rooms)
         callback({
           roomName,
         });
@@ -42,6 +43,17 @@ export class SocketManager {
       socket.on(SocketEvents.JoinRoom, (evtMsg, callback) => {
         const { roomName } = evtMsg;
         this.joinRoom(socket, roomName);
+        console.log(this.io.of('/').adapter.rooms)
+        callback({
+          roomName,
+        });
+      });
+
+      socket.on(SocketEvents.LeaveRoom, (evtMsg, callback) => {
+        console.log('LeavingRoom!!!!')
+        const { roomName } = evtMsg;
+        this.leaveRoom(socket, roomName);
+        console.log(this.io.of('/').adapter.rooms)
         callback({
           roomName,
         });
@@ -54,7 +66,7 @@ export class SocketManager {
   };
 
   getRooms = () => {
-    console.log(this.io.of('/').adapter.rooms);
+    // console.log(this.io.of('/').adapter.rooms);
     return this.rooms;
   };
 
@@ -69,7 +81,7 @@ export class SocketManager {
       player.socket.join(roomName);
       room.addPlayer(player);
     }
-    console.log(this.io.of('/').adapter.rooms);
+    // console.log(this.io.of('/').adapter.rooms);
     return room;
   };
 
@@ -80,7 +92,21 @@ export class SocketManager {
       player.socket.join(roomName);
       room.addPlayer(player);
     }
-    console.log(this.io.of('/').adapter.rooms);
+    // console.log(this.io.of('/').adapter.rooms);
     return room;
   };
+
+  leaveRoom = (socket: Socket, roomName: string) => {
+    const room = this.rooms.get(roomName);
+    const player = this.players.get(socket.id);
+    if (player && room) {
+      player.socket.leave(roomName);
+      room.removePlayer(player);
+      if (room.players.length === 0){
+        this.rooms.delete(roomName);
+      }
+    }
+    // console.log(this.io.of('/').adapter.rooms);    
+    return room;
+  }
 }
