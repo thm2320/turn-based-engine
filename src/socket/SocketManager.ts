@@ -1,67 +1,86 @@
-import { Server as HttpServer } from 'http';
-import { Server } from 'socket.io';
+import { Server, Socket } from 'socket.io';
 import { Room } from './Room';
 import { FourChainChess } from '../games/FourChainChess';
 import { Player } from './Player';
+import { SocketEvents } from './SocketEvents';
 
 export class SocketManager {
   private io: Server;
   private rooms: Map<string, Room> = new Map();
+  private players: Map<string, Player> = new Map();
 
-  constructor(httpServer: HttpServer) {
-    this.io = new Server(httpServer,{
-      cors: {
-        origin: "http://localhost:3001",
-        credentials: true
-      }
-    });
+  constructor(io: Server) {
+    this.io = io;
   }
 
   init(): void {
-    this.io.on('connection', (socket) => {
+    this.io.on(SocketEvents.Connection, (socket) => {
       console.log(`${socket.id} connected`);
-      
+
       const newPlayer = new Player(socket);
-      const room = this.getAvailableRoom();
-      room.addPlayer(newPlayer);
-      room.sendMessage(`${socket.id} joined`);
-      console.log(this.io.of('/').adapter.rooms)
+      this.players.set(socket.id, newPlayer);
+      // const room = this.getAvailableRoom();
+      // room.addPlayer(newPlayer);
+      // room.sendMessage(`${socket.id} joined`);
+      console.log(this.io.of('/').adapter.rooms);
 
-      socket.on('disconnecting', () => {
-        console.log(`${socket.id} disconnecting ======`)
-        const socketRoom = this.io.of('/').adapter.rooms.get(room.name);
-        console.log(`socketRoom ${socketRoom}`)
-        console.log(`Rooms size: ${this.rooms.size}`)
-      })
-      socket.on('disconnect', () => {
-        console.log(`${socket.id} disconnected ======`)
+      socket.on(SocketEvents.ListRooms, (evtMsg, callback) => {
+        const roomMap = this.getRooms();
+        callback({
+          rooms: Array.from(roomMap.keys()),
+        });
+      });
 
-        const socketRoom = this.io.of('/').adapter.rooms.get(room.name);
-        if (!socketRoom) {
-          console.log('socketRoom not found')
-          room.cleanUp();
-          this.rooms.delete(room.name)
-        }
-        console.log(`Rooms size: ${this.rooms.size}`)
-        console.log(socket.rooms)
-      })
+      socket.on(SocketEvents.OpenRoom, (evtMsg, callback) => {
+        const { roomName } = evtMsg;
+        this.openRoom(socket, roomName);
+        callback({
+          roomName,
+        });
+      });
+
+      socket.on(SocketEvents.JoinRoom, (evtMsg, callback) => {
+        const { roomName } = evtMsg;
+        this.joinRoom(socket, roomName);
+        callback({
+          roomName,
+        });
+      });
     });
   }
 
-  getAvailableRoom = () => {
-    for (const [, room] of this.rooms) {
-      if (!room.isFull()) {
-        return room;
-      }
+  getPlayers = () => {
+    return this.players;
+  };
+
+  getRooms = () => {
+    console.log(this.io.of('/').adapter.rooms);
+    return this.rooms;
+  };
+
+  openRoom = (socket: Socket, roomName: string) => {
+    let room = this.rooms.get(roomName);
+    if (!room) {
+      room = new Room(this.io, roomName, 2, new FourChainChess());
+      this.rooms.set(roomName, room);
     }
-    const roomName = `FourChainChessRoom-${new Date().valueOf()}`;
-    const newRoom = new Room(
-      this.io,
-      roomName,
-      2,
-      new FourChainChess()
-    );
-    this.rooms.set(roomName, newRoom)
-    return newRoom;
+    const player = this.players.get(socket.id);
+    if (player) {
+      player.socket.join(roomName);
+      room.addPlayer(player);
+    }
+    console.log(this.io.of('/').adapter.rooms);
+    return room;
+  };
+
+  joinRoom = (socket: Socket, roomName: string) => {
+    const room = this.rooms.get(roomName);
+    const player = this.players.get(socket.id);
+    if (player && room) {
+      player.socket.join(roomName);
+      room.addPlayer(player);
+    }
+    console.log(this.io.of('/').adapter.rooms);
+    return room;
   };
 }
