@@ -17,16 +17,15 @@ export class Room {
     this.game = game;
   }
 
-  cleanUp = () : void => {
+  cleanUp = (): void => {
     this.game.cleanUp();
     this.players = [];
-  }
+  };
 
   addPlayer = (player: Player): void => {
     if (this.isFull()) {
       throw new Error('Room is full');
     }
-    player.socket.join(this.name);
     this.players.push(player);
     this.game.addPlayer(player);
     if (this.game.canStart()) {
@@ -61,7 +60,13 @@ export class Room {
           if (this.game.status === 'finished') {
             console.log(`${player.socket.id} won!`);
           }
-          this.io.in(this.name).emit('update_move', {player: player.socket.id, step: steps, isFinished: this.game.status === 'finished'})
+          this.io
+            .in(this.name)
+            .emit('update_move', {
+              player: player.socket.id,
+              step: steps,
+              isFinished: this.game.status === 'finished',
+            });
         } catch (e: any) {
           console.log(e);
         }

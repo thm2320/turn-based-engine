@@ -26,34 +26,39 @@ export class SocketManager {
 
       socket.on(SocketEvents.ListRooms, (evtMsg, callback) => {
         const roomMap = this.getRooms();
-        callback({
-          rooms: Array.from(roomMap.keys()),
-        });
+        if (callback){
+          callback({
+            rooms: Array.from(roomMap.keys()),
+          });
+        }
       });
 
       socket.on(SocketEvents.OpenRoom, (evtMsg, callback) => {
         const { roomName } = evtMsg;
         this.openRoom(socket, roomName);
-        console.log(this.io.of('/').adapter.rooms)
-        callback({
-          roomName,
-        });
+        console.log('After Open', this.io.of('/').adapter.rooms)
+        if (callback) {
+          callback({
+            roomName,
+          });
+        }
       });
 
       socket.on(SocketEvents.JoinRoom, (evtMsg, callback) => {
         const { roomName } = evtMsg;
         this.joinRoom(socket, roomName);
-        console.log(this.io.of('/').adapter.rooms)
-        callback({
-          roomName,
-        });
+        console.log('After Join', this.io.of('/').adapter.rooms)
+        if (callback) {
+          callback({
+            roomName,
+          });
+        }
       });
 
       socket.on(SocketEvents.LeaveRoom, (evtMsg, callback) => {
-        console.log('LeavingRoom!!!!')
         const { roomName } = evtMsg;
         this.leaveRoom(socket, roomName);
-        console.log(this.io.of('/').adapter.rooms)
+        console.log('After Leave',this.io.of('/').adapter.rooms)
         callback({
           roomName,
         });
