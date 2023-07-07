@@ -1,17 +1,15 @@
-import { beforeAll, afterAll, describe, expect, test } from '@jest/globals';
-import { Player } from '../../socket/Player';
+import { beforeEach, afterEach, describe, expect, test } from '@jest/globals';
 import { Server as SocketServer } from 'socket.io';
 import { io as clientIo, Socket as ClientSocket } from 'socket.io-client';
-import { createServer } from 'http';
+import { createServer, Server } from 'http';
 import { SocketManager } from '../../socket/SocketManager';
 import socketServer from '../../socket/socketServer';
 import { SocketEvents } from '../SocketEvents';
 
 describe('SockerManager', () => {
+  let httpServer: Server;
   let io: SocketServer;
   let socketManager: SocketManager;
-  let player1: Player;
-  let player2: Player;
   let clientSocket1: ClientSocket;
   let clientSocket2: ClientSocket;
   const testRoomName = 'Test-Room';
@@ -21,8 +19,44 @@ describe('SockerManager', () => {
     reconnection: false,
   };
 
-  beforeAll((done) => {
-    const httpServer = createServer();
+  const operateRoom = (clientSocket: ClientSocket, event: SocketEvents, evtMsg: any) => {
+    return new Promise((resolve, reject) => {
+      clientSocket.emit(
+        event,
+        evtMsg,
+        (response: any) => {
+          resolve(response);
+        }
+      );
+    });
+  }
+
+  const listRoom = (clientSocket: ClientSocket) => {
+    return operateRoom(clientSocket, SocketEvents.ListRooms, {
+      roomName: testRoomName,
+    });
+  };
+
+  const openRoom = (clientSocket: ClientSocket) => {
+    return operateRoom(clientSocket, SocketEvents.OpenRoom, {
+      roomName: testRoomName,
+    });
+  };
+
+  const joinRoom = (clientSocket: ClientSocket) => {
+    return operateRoom(clientSocket, SocketEvents.JoinRoom, {
+      roomName: testRoomName,
+    });
+  };
+
+  const leaveRoom = (clientSocket: ClientSocket) => {
+    return operateRoom(clientSocket, SocketEvents.LeaveRoom, {
+      roomName: testRoomName,
+    });
+  }
+
+  beforeEach((done) => {
+    httpServer = createServer();
     io = socketServer(httpServer);
     socketManager = new SocketManager(io);
     socketManager.init();
@@ -35,101 +69,78 @@ describe('SockerManager', () => {
       clientSocket1 = clientIo(`http://localhost:${port}`, ioOptions);
       clientSocket2 = clientIo(`http://localhost:${port}`, ioOptions);
       clientSocket2.on('connect', () => {
-        const playerMap = socketManager.getPlayers();
-        const mapIterator = playerMap.values();
-        player1 = mapIterator.next().value;
-        player2 = mapIterator.next().value;
         done();
       });
     });
   });
 
-  afterAll((done) => {
-    setTimeout(done, 500);
+  afterEach((done) => {
+    io.close(()=>{
+      console.log('io closed !!!!!')
+    })
+    httpServer.close(()=>{
+      console.log('http server closed!!!!')
+      done()
+    })
   });
 
-  test('List 0 rooms', (done) => {
-    clientSocket1.emit(SocketEvents.ListRooms, {}, (response: any) => {
-      const { rooms } = response;
-      expect(rooms.length).toBe(0);
-      done();
-    });
+  test('List 0 rooms', async() => {
+    const response: any = await listRoom(clientSocket1);
+    const { rooms } = response;
+    expect(rooms.length).toBe(0);
   });
 
-  test('Player1 open room "Test-Room"', (done) => {
-    clientSocket1.emit(
-      SocketEvents.OpenRoom,
-      { roomName: testRoomName },
-      (response: any) => {
-        // socketManager.openRoom(player1.socket.id, testRoomName);
-        const roomMap = socketManager.getRooms();
-        expect(roomMap.size).toBe(1);
-        const roomName = roomMap.keys().next().value;
-        expect(roomName).toBe(testRoomName);
-
-        const ioRoomMap = io.of('/').adapter.rooms;
-        done();
-      }
-    );
+  test('Player1 open room "Test-Room"', async () => {
+    await openRoom(clientSocket1)
+    const roomMap = socketManager.getRooms();
+    expect(roomMap.size).toBe(1);
+    const roomName = roomMap.keys().next().value;
+    expect(roomName).toBe(testRoomName);
   });
 
-  test('Player2 Join Room "Test-Room"', (done) => {
-    clientSocket2.emit(
-      SocketEvents.JoinRoom,
-      { roomName: testRoomName },
-      (response: any) => {
-        // console.log(response);
-        // socketManager.joinRoom(player2.socket.id, testRoomName);
-        const roomMap = socketManager.getRooms();
-        expect(roomMap.size).toBe(1);
-        const roomName = roomMap.keys().next().value;
-        expect(roomName).toBe(testRoomName);
-        const socketRoom = io.of('/').adapter.rooms.get(testRoomName);
-        // console.log(socketRoom);
-        expect(socketRoom?.size).toBe(2);
-        done();
-      }
-    );
+  test('Player2 Join Room "Test-Room"', async () => {
+    await openRoom(clientSocket1);
+    await joinRoom(clientSocket2);
+    const roomMap = socketManager.getRooms();
+    expect(roomMap.size).toBe(1);
+    const roomName = roomMap.keys().next().value;
+    expect(roomName).toBe(testRoomName);
+    const socketRoom = io.of('/').adapter.rooms.get(testRoomName);
+    expect(socketRoom?.size).toBe(2);
   });
 
-  test('List 1 room', (done) => {
-    clientSocket1.emit(SocketEvents.ListRooms, {}, (response: any) => {
-      const { rooms } = response;
-      expect(rooms.length).toBe(1);
-      expect(rooms[0]).toBe(testRoomName);
-      done();
-    });
+  test('List room after room is opened by player 1', async () => {
+    await openRoom(clientSocket1);
+    const response: any = await listRoom(clientSocket1);
+
+    const { rooms } = response;
+    expect(rooms.length).toBe(1);
+    expect(rooms[0]).toBe(testRoomName);
   });
 
-  test('Player1 leaves Room "Test-Room"', (done) => {
-    clientSocket1.emit(
-      SocketEvents.LeaveRoom,
-      { roomName: testRoomName },
-      (response: any) => {
-        const ioRoomMap = io.of('/').adapter.rooms;
-        const roomSockets = ioRoomMap.get(testRoomName);
-        expect(roomSockets?.size).toBe(1);
-
-        const roomMap = socketManager.getRooms();
-        expect(roomMap.size).toBe(1);
-        done();
-      }
-    );
+  test('List room after both players in the same room', async () => {
+    await openRoom(clientSocket1);
+    await joinRoom(clientSocket2);
+    const response: any = await listRoom(clientSocket1);
+    const { rooms } = response;
+    expect(rooms.length).toBe(1);
+    expect(rooms[0]).toBe(testRoomName);
   });
 
-  test('Player2 leaves Room "Test-Room" 2', (done) => {
-    clientSocket2.emit(
-      SocketEvents.LeaveRoom,
-      { roomName: testRoomName },
-      (response: any) => {
-        const ioRoomMap = io.of('/').adapter.rooms;
-        const roomSockets = ioRoomMap.get(testRoomName);
-        expect(roomSockets).toBe(undefined);
+  test('Both Players leave Room "Test-Room" 1 by 1', async () => {
+    await openRoom(clientSocket1);
+    await joinRoom(clientSocket2);
+    await leaveRoom(clientSocket1);
+    const ioRoomMap = io.of('/').adapter.rooms;
+    const roomSockets = ioRoomMap.get(testRoomName);
+    expect(roomSockets?.size).toBe(1);
+    const roomMap = socketManager.getRooms();
+    expect(roomMap.size).toBe(1);
 
-        const roomMap = socketManager.getRooms();
-        expect(roomMap.size).toBe(0);
-        done();
-      }
-    );
+    await leaveRoom(clientSocket2);
+    expect(roomSockets?.size).toBe(0);
+    expect(roomMap.size).toBe(0);
+    
   });
+
 });
