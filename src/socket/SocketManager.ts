@@ -24,6 +24,15 @@ export class SocketManager {
       // room.sendMessage(`${socket.id} joined`);
       console.log(this.io.of('/').adapter.rooms);
 
+      socket.on(SocketEvents.Disconnecting, () => {
+        socket.rooms.forEach((roomName)=>{
+          if (socket.id !== roomName){
+            this.leaveRoom(socket, roomName)
+          }
+        })
+        this.players.delete(socket.id)
+      })
+
       socket.on(SocketEvents.ListRooms, (evtMsg, callback) => {
         const roomMap = this.getRooms();
         if (callback){

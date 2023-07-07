@@ -137,7 +137,27 @@ describe('SockerManager', () => {
     await leaveRoom(clientSocket2);
     expect(roomSockets?.size).toBe(0);
     expect(roomMap.size).toBe(0);
+  });
+
+  test('Player 1 disconnected, Room should be removed', async () => {
+    const playerMap = socketManager.getPlayers();
+    expect(playerMap.size).toBe(2)
     
+    await openRoom(clientSocket1);
+    clientSocket1.disconnect();
+    
+    // wait for a while for the disconnect handler complete
+    await (()=>new Promise((resolve)=>{
+      setTimeout(resolve,100)
+    }))()
+
+    const ioRoomMap = io.of('/').adapter.rooms;
+    const roomSockets = ioRoomMap.get(testRoomName);
+    expect(roomSockets).toBe(undefined);
+    const roomMap = socketManager.getRooms();
+    expect(roomMap.size).toBe(0);
+    
+    expect(playerMap.size).toBe(1)
   });
 
 });
