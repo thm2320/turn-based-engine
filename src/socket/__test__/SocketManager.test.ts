@@ -75,11 +75,8 @@ describe('SockerManager', () => {
   });
 
   afterEach((done) => {
-    io.close(()=>{
-      console.log('io closed !!!!!')
-    })
+    io.close()
     httpServer.close(()=>{
-      console.log('http server closed!!!!')
       done()
     })
   });

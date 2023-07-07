@@ -3,11 +3,13 @@ import { FourChainChess } from './FourChainChess';
 import { Player } from '../socket/Player';
 import { Server } from 'socket.io';
 import { io as clientIo } from 'socket.io-client';
-import { createServer } from 'http';
+import { createServer, Server as HttpServer } from 'http';
 
 describe('FourChainChess Class', () => {
   let playerA: Player;
   let playerB: Player;
+  let io: Server;
+  let httpServer: HttpServer;
   const ioOptions = {
     transports: ['websocket'],
     forceNew: true,
@@ -15,8 +17,8 @@ describe('FourChainChess Class', () => {
   };
 
   beforeAll((done) => {
-    const httpServer = createServer();
-    let io = new Server(httpServer);
+    httpServer = createServer();
+    io = new Server(httpServer);
     httpServer.listen(() => {
       const address = httpServer.address();
       console.log(address);
@@ -41,7 +43,10 @@ describe('FourChainChess Class', () => {
   });
 
   afterAll((done) => {
-    setTimeout(done, 500);
+    io.close()
+    httpServer.close(()=>{
+      done()
+    })
   });
 
   test('Check win for horizontal left only', () => {
