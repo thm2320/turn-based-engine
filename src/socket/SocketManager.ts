@@ -2,7 +2,7 @@ import { Server, Socket } from 'socket.io';
 import { Room } from './Room';
 import { FourChainChess } from '../games/FourChainChess';
 import { Player } from './Player';
-import { SocketEvents } from './SocketEvents';
+import { SocketEvents, CustomRoomEvent } from './SocketEvent';
 
 export class SocketManager {
   private io: Server;
@@ -33,7 +33,7 @@ export class SocketManager {
         this.players.delete(socket.id)
       })
 
-      socket.on(SocketEvents.ListRooms, (evtMsg, callback) => {
+      socket.on(CustomRoomEvent.ListRooms, (evtMsg, callback) => {
         const roomMap = this.getRooms();
         if (callback){
           callback({
@@ -42,7 +42,7 @@ export class SocketManager {
         }
       });
 
-      socket.on(SocketEvents.OpenRoom, (evtMsg, callback) => {
+      socket.on(CustomRoomEvent.OpenRoom, (evtMsg, callback) => {
         const { roomName } = evtMsg;
         this.openRoom(socket, roomName);
         console.log('After Open', this.io.of('/').adapter.rooms)
@@ -53,7 +53,7 @@ export class SocketManager {
         }
       });
 
-      socket.on(SocketEvents.JoinRoom, (evtMsg, callback) => {
+      socket.on(CustomRoomEvent.JoinRoom, (evtMsg, callback) => {
         const { roomName } = evtMsg;
         this.joinRoom(socket, roomName);
         console.log('After Join', this.io.of('/').adapter.rooms)
@@ -64,7 +64,7 @@ export class SocketManager {
         }
       });
 
-      socket.on(SocketEvents.LeaveRoom, (evtMsg, callback) => {
+      socket.on(CustomRoomEvent.LeaveRoom, (evtMsg, callback) => {
         const { roomName } = evtMsg;
         this.leaveRoom(socket, roomName);
         console.log('After Leave',this.io.of('/').adapter.rooms)
