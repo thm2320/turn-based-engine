@@ -19,7 +19,7 @@ export class FourChainChess extends TurnBasedGame {
   private players: Player[];
   private gameboard: string[][];
   private playerTurn: number = 0;
-
+  
   constructor() {
     super();
     this.players = [];
@@ -38,7 +38,7 @@ export class FourChainChess extends TurnBasedGame {
   }
 
   addPlayer(player: Player): void {
-    if (this.status === 'waiting') {
+    if (this.players.length < this.MAX_PLAYER) {
       this.players.push(player);
     } else {
       throw new Error('Now allowed to join game');
@@ -59,7 +59,7 @@ export class FourChainChess extends TurnBasedGame {
       this.playerTurn = (this.playerTurn + 1) % this.players.length;
       let row = this.gameboard[column].length - 1;
       if (this.isWin(column, row)) {
-        this.status = 'finished';
+        this.isCompleted = true;
       }
     } else {
       throw new Error(`It is not turn for player ${player.socket.id}`);
@@ -88,6 +88,8 @@ export class FourChainChess extends TurnBasedGame {
       }
       return 1 + getConnectedNum(chess, { x, y }, direction);
     };
+
+    
 
     //honizontal check
     let horizontalNum = getConnectedNum(
