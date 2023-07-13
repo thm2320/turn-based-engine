@@ -2,8 +2,7 @@ export enum SocketEvents {
   Connection = 'connection',
   Disconnecting = 'disconnecting',
   Disconnect = 'disconnect',
-  ListRooms = 'list_rooms',
-  OpenRoom = 'open_room',
-  JoinRoom = 'join_room',
-  LeaveRoom = 'leave_room',
 }
+
+export { CustomRoomEvent } from './CustomRoomEvent';
+export { CustomGameEvent } from './CustomGameEvent';
