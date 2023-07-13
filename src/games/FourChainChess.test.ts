@@ -1,13 +1,15 @@
-import { beforeAll, describe, expect, test } from '@jest/globals';
+import { beforeAll, afterAll, describe, expect, test } from '@jest/globals';
 import { FourChainChess } from './FourChainChess';
 import { Player } from '../socket/Player';
 import { Server } from 'socket.io';
 import { io as clientIo } from 'socket.io-client';
-import { createServer } from 'http';
+import { createServer, Server as HttpServer } from 'http';
 
 describe('FourChainChess Class', () => {
   let playerA: Player;
   let playerB: Player;
+  let io: Server;
+  let httpServer: HttpServer;
   const ioOptions = {
     transports: ['websocket'],
     forceNew: true,
@@ -15,14 +17,15 @@ describe('FourChainChess Class', () => {
   };
 
   beforeAll((done) => {
-    const httpServer = createServer();
-    let io = new Server(httpServer);
+    httpServer = createServer();
+    io = new Server(httpServer);
     httpServer.listen(() => {
       const address = httpServer.address();
       console.log(address);
       const port =
         typeof address === 'object' && address !== null ? address.port : '3000';
 
+      clientIo(`http://localhost:${port}`, ioOptions);
       let clientSocket = clientIo(`http://localhost:${port}`, ioOptions);
       io.on('connection', (socket) => {
         if (playerA === undefined) {
@@ -30,16 +33,20 @@ describe('FourChainChess Class', () => {
         } else {
           playerB = new Player(socket);
         }
-        console.log(playerA);
-        console.log(playerB);
+      });
+      clientSocket.on('connect', () => {
         if (playerA !== undefined && playerB !== undefined) {
           done();
         }
       });
-      clientSocket.on('connect', () => {
-        clientIo(`http://localhost:${port}`, ioOptions);
-      });
     });
+  });
+
+  afterAll((done) => {
+    io.close()
+    httpServer.close(()=>{
+      done()
+    })
   });
 
   test('Check win for horizontal left only', () => {
