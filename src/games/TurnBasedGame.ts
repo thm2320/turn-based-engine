@@ -1,7 +1,7 @@
 import { Player } from "../socket/Player";
 
 export abstract class TurnBasedGame {
-  public status: "waiting" | "playing" | "finished" = "waiting";
+  protected isCompleted: boolean;
 
   abstract cleanUp(): void;
 
@@ -10,4 +10,12 @@ export abstract class TurnBasedGame {
   abstract move(player: Player, step: any): void;
   // abstract isWin(): boolean;
   abstract printBoard(): void;
+
+  constructor() {
+    this.isCompleted = false;
+  }
+
+  getIsCompleted : ()=>boolean = () => {
+    return this.isCompleted;
+  }
 }
