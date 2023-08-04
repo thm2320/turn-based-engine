@@ -1,7 +1,7 @@
-import { Player } from "../socket/Player";
+import { Player } from '../socket/Player';
 
 export abstract class TurnBasedGame {
-  protected isCompleted: boolean;
+  isCompleted: boolean;
 
   abstract cleanUp(): void;
 
@@ -15,7 +15,7 @@ export abstract class TurnBasedGame {
     this.isCompleted = false;
   }
 
-  getIsCompleted : ()=>boolean = () => {
+  getIsCompleted: () => boolean = () => {
     return this.isCompleted;
-  }
+  };
 }
