@@ -4,7 +4,7 @@ import { io as clientIo, Socket as ClientSocket } from 'socket.io-client';
 import { createServer, Server } from 'http';
 import { SocketManager } from '../../socket/SocketManager';
 import socketServer from '../../socket/socketServer';
-import { SocketEvents } from '../SocketEvents';
+import { CustomRoomEvent } from '../SocketEvent';
 
 describe('SockerManager', () => {
   let httpServer: Server;
@@ -19,41 +19,41 @@ describe('SockerManager', () => {
     reconnection: false,
   };
 
-  const operateRoom = (clientSocket: ClientSocket, event: SocketEvents, evtMsg: any) => {
+  const operateRoom = (
+    clientSocket: ClientSocket,
+    event: CustomRoomEvent,
+    evtMsg: any
+  ) => {
     return new Promise((resolve, reject) => {
-      clientSocket.emit(
-        event,
-        evtMsg,
-        (response: any) => {
-          resolve(response);
-        }
-      );
+      clientSocket.emit(event, evtMsg, (response: any) => {
+        resolve(response);
+      });
     });
-  }
+  };
 
   const listRoom = (clientSocket: ClientSocket) => {
-    return operateRoom(clientSocket, SocketEvents.ListRooms, {
+    return operateRoom(clientSocket, CustomRoomEvent.ListRooms, {
       roomName: testRoomName,
     });
   };
 
   const openRoom = (clientSocket: ClientSocket) => {
-    return operateRoom(clientSocket, SocketEvents.OpenRoom, {
+    return operateRoom(clientSocket, CustomRoomEvent.OpenRoom, {
       roomName: testRoomName,
     });
   };
 
   const joinRoom = (clientSocket: ClientSocket) => {
-    return operateRoom(clientSocket, SocketEvents.JoinRoom, {
+    return operateRoom(clientSocket, CustomRoomEvent.JoinRoom, {
       roomName: testRoomName,
     });
   };
 
   const leaveRoom = (clientSocket: ClientSocket) => {
-    return operateRoom(clientSocket, SocketEvents.LeaveRoom, {
+    return operateRoom(clientSocket, CustomRoomEvent.LeaveRoom, {
       roomName: testRoomName,
     });
-  }
+  };
 
   beforeEach((done) => {
     httpServer = createServer();
@@ -75,20 +75,20 @@ describe('SockerManager', () => {
   });
 
   afterEach((done) => {
-    io.close()
-    httpServer.close(()=>{
-      done()
-    })
+    io.close();
+    httpServer.close(() => {
+      done();
+    });
   });
 
-  test('List 0 rooms', async() => {
+  test('List 0 rooms', async () => {
     const response: any = await listRoom(clientSocket1);
     const { rooms } = response;
     expect(rooms.length).toBe(0);
   });
 
   test('Player1 open room "Test-Room"', async () => {
-    await openRoom(clientSocket1)
+    await openRoom(clientSocket1);
     const roomMap = socketManager.getRooms();
     expect(roomMap.size).toBe(1);
     const roomName = roomMap.keys().next().value;
@@ -141,23 +141,23 @@ describe('SockerManager', () => {
 
   test('Player 1 disconnected, Room should be removed', async () => {
     const playerMap = socketManager.getPlayers();
-    expect(playerMap.size).toBe(2)
-    
+    expect(playerMap.size).toBe(2);
+
     await openRoom(clientSocket1);
     clientSocket1.disconnect();
-    
+
     // wait for a while for the disconnect handler complete
-    await (()=>new Promise((resolve)=>{
-      setTimeout(resolve,100)
-    }))()
+    await (() =>
+      new Promise((resolve) => {
+        setTimeout(resolve, 100);
+      }))();
 
     const ioRoomMap = io.of('/').adapter.rooms;
     const roomSockets = ioRoomMap.get(testRoomName);
     expect(roomSockets).toBe(undefined);
     const roomMap = socketManager.getRooms();
     expect(roomMap.size).toBe(0);
-    
-    expect(playerMap.size).toBe(1)
-  });
 
+    expect(playerMap.size).toBe(1);
+  });
 });

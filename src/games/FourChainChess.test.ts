@@ -43,10 +43,10 @@ describe('FourChainChess Class', () => {
   });
 
   afterAll((done) => {
-    io.close()
-    httpServer.close(()=>{
-      done()
-    })
+    io.close();
+    httpServer.close(() => {
+      done();
+    });
   });
 
   test('Check win for horizontal left only', () => {
@@ -54,7 +54,7 @@ describe('FourChainChess Class', () => {
     game.addPlayer(playerA);
     game.addPlayer(playerB);
 
-    expect(game.status).not.toBe('finished');
+    expect(game.isCompleted).not.toBe(true);
     game.move(playerA, 0);
     game.move(playerB, 0);
     game.move(playerA, 1);
@@ -63,16 +63,16 @@ describe('FourChainChess Class', () => {
     game.move(playerB, 2);
     game.move(playerA, 3);
     game.printBoard();
-    expect(game.status).toBe('finished');
+    expect(game.isCompleted).toBe(true);
   });
 
   test('Check win for horizontal right only', () => {
     let game = new FourChainChess();
     game.addPlayer(playerA);
     game.addPlayer(playerB);
-    console.log(game.status);
+    console.log(game.isCompleted);
 
-    expect(game.status).not.toBe('finished');
+    expect(game.isCompleted).not.toBe(true);
     game.move(playerA, 6);
     game.move(playerB, 6);
     game.move(playerA, 5);
@@ -81,16 +81,16 @@ describe('FourChainChess Class', () => {
     game.move(playerB, 4);
     game.move(playerA, 3);
     game.printBoard();
-    expect(game.status).toBe('finished');
+    expect(game.isCompleted).toBe(true);
   });
 
   test('Check win for horizontal mixed', () => {
     let game = new FourChainChess();
     game.addPlayer(playerA);
     game.addPlayer(playerB);
-    console.log(game.status);
+    console.log(game.isCompleted);
 
-    expect(game.status).not.toBe('finished');
+    expect(game.isCompleted).not.toBe(true);
     game.move(playerA, 2);
     game.move(playerB, 2);
     game.move(playerA, 5);
@@ -99,7 +99,7 @@ describe('FourChainChess Class', () => {
     game.move(playerB, 4);
     game.move(playerA, 3);
     game.printBoard();
-    expect(game.status).toBe('finished');
+    expect(game.isCompleted).toBe(true);
   });
 
   /*
@@ -112,9 +112,9 @@ describe('FourChainChess Class', () => {
     let game = new FourChainChess();
     game.addPlayer(playerA);
     game.addPlayer(playerB);
-    console.log(game.status);
+    console.log(game.isCompleted);
 
-    expect(game.status).not.toBe('finished');
+    expect(game.isCompleted).not.toBe(true);
     game.move(playerA, 1);
     game.move(playerB, 2);
     game.move(playerA, 2);
@@ -127,16 +127,16 @@ describe('FourChainChess Class', () => {
     game.move(playerB, 4);
     game.move(playerA, 4);
     game.printBoard();
-    expect(game.status).toBe('finished');
+    expect(game.isCompleted).toBe(true);
   });
 
   test('Check win for diagonal up mixed order', () => {
     let game = new FourChainChess();
     game.addPlayer(playerA);
     game.addPlayer(playerB);
-    console.log(game.status);
+    console.log(game.isCompleted);
 
-    expect(game.status).not.toBe('finished');
+    expect(game.isCompleted).not.toBe(true);
     game.move(playerA, 1);
     game.move(playerB, 4);
     game.move(playerA, 4);
@@ -149,7 +149,7 @@ describe('FourChainChess Class', () => {
     game.move(playerB, 2);
     game.move(playerA, 2);
     game.printBoard();
-    expect(game.status).toBe('finished');
+    expect(game.isCompleted).toBe(true);
   });
 
   /*
@@ -162,9 +162,9 @@ describe('FourChainChess Class', () => {
     let game = new FourChainChess();
     game.addPlayer(playerA);
     game.addPlayer(playerB);
-    console.log(game.status);
+    console.log(game.isCompleted);
 
-    expect(game.status).not.toBe('finished');
+    expect(game.isCompleted).not.toBe(true);
     game.move(playerA, 2);
     game.move(playerB, 1);
     game.move(playerA, 4);
@@ -177,16 +177,16 @@ describe('FourChainChess Class', () => {
     game.move(playerB, 6);
     game.move(playerA, 1);
     game.printBoard();
-    expect(game.status).toBe('finished');
+    expect(game.isCompleted).toBe(true);
   });
 
   test('Check win for vertical', () => {
     let game = new FourChainChess();
     game.addPlayer(playerA);
     game.addPlayer(playerB);
-    console.log(game.status);
+    console.log(game.isCompleted);
 
-    expect(game.status).not.toBe('finished');
+    expect(game.isCompleted).not.toBe(true);
     game.move(playerA, 0);
     game.move(playerB, 1);
     game.move(playerA, 0);
@@ -195,6 +195,6 @@ describe('FourChainChess Class', () => {
     game.move(playerB, 1);
     game.move(playerA, 0);
     game.printBoard();
-    expect(game.status).toBe('finished');
+    expect(game.isCompleted).toBe(true);
   });
 });
