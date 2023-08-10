@@ -6,3 +6,4 @@ export enum SocketEvents {
 
 export { CustomRoomEvent } from './CustomRoomEvent';
 export { CustomGameEvent } from './CustomGameEvent';
+export { CustomPlayerEvent } from './CustomPlayerEvent';
