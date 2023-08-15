@@ -1,4 +1,4 @@
-import { Player } from '../socket/Player';
+import { Player } from '../socket/Classes/Player';
 import { TurnBasedGame } from './TurnBasedGame';
 
 enum Chess {
@@ -7,10 +7,10 @@ enum Chess {
 }
 
 type Coordinate = {
-  x: number,
-  y: number,
-}
-export class FourChainChess extends TurnBasedGame {
+  x: number;
+  y: number;
+};
+export class ConnectFourChess extends TurnBasedGame {
   readonly MIN_PLAYER = 2;
   readonly MAX_PLAYER = 2;
   readonly BOARD_WIDTH = 7;
@@ -19,7 +19,7 @@ export class FourChainChess extends TurnBasedGame {
   private players: Player[];
   private gameboard: string[][];
   private playerTurn: number = 0;
-  
+
   constructor() {
     super();
     this.players = [];
@@ -89,57 +89,36 @@ export class FourChainChess extends TurnBasedGame {
       return 1 + getConnectedNum(chess, { x, y }, direction);
     };
 
-    
-
     //honizontal check
-    let horizontalNum = getConnectedNum(
-      lastStepChess,
-      { x, y },
-      { x: -1, y: 0 }
-    ) + 1 + getConnectedNum(
-      lastStepChess,
-      { x, y },
-      { x: 1, y: 0 }
-    ) ;
+    let horizontalNum =
+      getConnectedNum(lastStepChess, { x, y }, { x: -1, y: 0 }) +
+      1 +
+      getConnectedNum(lastStepChess, { x, y }, { x: 1, y: 0 });
     if (horizontalNum >= 4) {
       return true;
     }
 
     //diagonal up check
-    let diagonalUpNum = getConnectedNum(
-      lastStepChess,
-      { x, y },
-      { x: -1, y: -1 }
-    ) + 1 + getConnectedNum(
-      lastStepChess,
-      { x, y },
-      { x: 1, y: 1 }
-    ) ;
+    let diagonalUpNum =
+      getConnectedNum(lastStepChess, { x, y }, { x: -1, y: -1 }) +
+      1 +
+      getConnectedNum(lastStepChess, { x, y }, { x: 1, y: 1 });
     if (diagonalUpNum >= 4) {
       return true;
     }
 
-    
     //diagonal down check
-    let diagonalDownNum = getConnectedNum(
-      lastStepChess,
-      { x, y },
-      { x: -1, y: 1 }
-    ) + 1 + getConnectedNum(
-      lastStepChess,
-      { x, y },
-      { x: 1, y: -1 }
-    ) ;
+    let diagonalDownNum =
+      getConnectedNum(lastStepChess, { x, y }, { x: -1, y: 1 }) +
+      1 +
+      getConnectedNum(lastStepChess, { x, y }, { x: 1, y: -1 });
     if (diagonalDownNum >= 4) {
       return true;
     }
 
     //vertical check
-    let verticalNum = getConnectedNum(
-      lastStepChess,
-      { x, y },
-      { x: 0, y: -1 }
-    ) + 1 ;
+    let verticalNum =
+      getConnectedNum(lastStepChess, { x, y }, { x: 0, y: -1 }) + 1;
     if (verticalNum >= 4) {
       return true;
     }

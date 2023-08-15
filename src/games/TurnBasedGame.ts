@@ -1,4 +1,4 @@
-import { Player } from '../socket/Player';
+import { Player } from '../socket/Classes/Player';
 
 export abstract class TurnBasedGame {
   isCompleted: boolean;

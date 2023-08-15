@@ -1,11 +1,11 @@
 import { Server, Socket } from 'socket.io';
 import { SocketManager } from '../SocketManager';
-import { FourChainChess } from '../../games/FourChainChess';
-import { Room } from '../Room';
+import { ConnectFourChess } from '../../games/ConnectFourChess';
+import { Room } from '../Classes/Room';
 import { CustomRoomEvent } from '../SocketEvent';
 
 const listRoom =
-  (socketManager: SocketManager, io: Server, socket: Socket) =>
+  (socketManager: SocketManager, socket: Socket) =>
   (evtMsg: any, callback: any) => {
     const roomMap = socketManager.getRooms();
     if (callback) {
@@ -16,12 +16,12 @@ const listRoom =
   };
 
 const openRoom =
-  (socketManager: SocketManager, io: Server, socket: Socket) =>
+  (socketManager: SocketManager, socket: Socket) =>
   (evtMsg: any, callback: any) => {
     const { roomName } = evtMsg;
     let room = socketManager.getRooms().get(roomName);
     if (!room) {
-      room = new Room(io, roomName, 2, new FourChainChess());
+      room = new Room(roomName, 2, new ConnectFourChess());
       socketManager.getRooms().set(roomName, room);
     }
     const player = socketManager.getPlayers().get(socket.id);
@@ -30,7 +30,7 @@ const openRoom =
       room.addPlayer(player);
     }
 
-    console.log('After Open', io.of('/').adapter.rooms);
+    // console.log('After Open', io.of('/').adapter.rooms);
     if (callback) {
       callback({
         roomName,
@@ -39,16 +39,12 @@ const openRoom =
   };
 
 const joinRoom =
-  (socketManager: SocketManager, io: Server, socket: Socket) =>
+  (socketManager: SocketManager, socket: Socket) =>
   (evtMsg: any, callback: any) => {
     const { roomName } = evtMsg;
-    const room = socketManager.getRooms().get(roomName);
-    const player = socketManager.getPlayers().get(socket.id);
-    if (player && room) {
-      player.socket.join(roomName);
-      room.addPlayer(player);
-    }
-    console.log('After Join', io.of('/').adapter.rooms);
+    socketManager.joinRoom(socket, roomName);
+
+    // console.log('After Join', io.of('/').adapter.rooms);
     if (callback) {
       callback({
         roomName,
@@ -57,7 +53,7 @@ const joinRoom =
   };
 
 const leaveRoom =
-  (socketManager: SocketManager, io: Server, socket: Socket) =>
+  (socketManager: SocketManager, socket: Socket) =>
   (evtMsg: any, callback: any) => {
     const { roomName } = evtMsg;
     const room = socketManager.getRooms().get(roomName);
@@ -69,19 +65,20 @@ const leaveRoom =
         socketManager.getRooms().delete(roomName);
       }
     }
-    console.log('After Leave', io.of('/').adapter.rooms);
+    // console.log('After Leave', io.of('/').adapter.rooms);
     callback({
       roomName,
     });
   };
 
-export const roomEventHandler = (
+const registerRoomEventHandlers = (
   socketManager: SocketManager,
-  io: Server,
   socket: Socket
 ) => {
-  socket.on(CustomRoomEvent.ListRooms, listRoom(socketManager, io, socket));
-  socket.on(CustomRoomEvent.OpenRoom, openRoom(socketManager, io, socket));
-  socket.on(CustomRoomEvent.JoinRoom, joinRoom(socketManager, io, socket));
-  socket.on(CustomRoomEvent.LeaveRoom, leaveRoom(socketManager, io, socket));
+  socket.on(CustomRoomEvent.ListRooms, listRoom(socketManager, socket));
+  socket.on(CustomRoomEvent.OpenRoom, openRoom(socketManager, socket));
+  socket.on(CustomRoomEvent.JoinRoom, joinRoom(socketManager, socket));
+  socket.on(CustomRoomEvent.LeaveRoom, leaveRoom(socketManager, socket));
 };
+
+export default registerRoomEventHandlers;

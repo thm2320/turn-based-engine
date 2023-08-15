@@ -1,13 +1,10 @@
 import { Server, Socket } from 'socket.io';
-import { Room } from './Room';
-import { Player } from './Player';
-import {
-  SocketEvents,
-  CustomRoomEvent,
-  CustomPlayerEvent,
-} from './SocketEvent';
-import { roomEventHandler } from './ioHandler/roomEventHandler';
-import { playerEventHandler } from './ioHandler/playerEventHandler';
+import { Room } from './Classes/Room';
+import { Player } from './Classes/Player';
+import { SocketEvent } from './SocketEvent';
+import registerBasicEventHandlers from './SocketHandler/basicEventHandler';
+import registerPlayerEventHandlers from './SocketHandler/playerEventHandler';
+import registerRoomEventHandlers from './SocketHandler/roomEventHandler';
 
 export class SocketManager {
   private io: Server;
@@ -18,25 +15,17 @@ export class SocketManager {
     this.io = io;
   }
 
-  init(): void {
-    this.io.on(SocketEvents.Connection, (socket) => {
+  registerEventHandlers(): void {
+    this.io.on(SocketEvent.Connection, (socket) => {
       console.log(`${socket.id} connected`);
 
-      const newPlayer = new Player(socket);
-      this.players.set(socket.id, newPlayer);
+      this.addPlayer(socket);
+
       console.log(this.io.of('/').adapter.rooms);
 
-      socket.on(SocketEvents.Disconnecting, () => {
-        socket.rooms.forEach((roomName) => {
-          if (socket.id !== roomName) {
-            this.leaveRoom(socket, roomName);
-          }
-        });
-        this.players.delete(socket.id);
-      });
-
-      playerEventHandler(this, this.io, socket);
-      roomEventHandler(this, this.io, socket);
+      registerBasicEventHandlers(this, socket);
+      registerPlayerEventHandlers(this, socket);
+      registerRoomEventHandlers(this, socket);
     });
   }
 
@@ -44,8 +33,33 @@ export class SocketManager {
     return this.players;
   };
 
+  addPlayer = (socket: Socket) => {
+    const newPlayer = new Player(socket);
+    this.players.set(socket.id, newPlayer);
+  };
+
+  updatePlayer = (socket: Socket, { username }: { username: string }) => {
+    const player = this.getPlayers().get(socket.id);
+    player.setUserName(username);
+    return player;
+  };
+
+  removePlayer = (socket: Socket) => {
+    this.players.delete(socket.id);
+  };
+
   getRooms = () => {
     return this.rooms;
+  };
+
+  joinRoom = (socket: Socket, roomName: string) => {
+    const room = this.getRooms().get(roomName);
+    const player = this.getPlayers().get(socket.id);
+    if (player && room) {
+      player.socket.join(roomName);
+      room.addPlayer(player);
+      room.registerGameEventHandlers(this.io);
+    }
   };
 
   leaveRoom = (socket: Socket, roomName: string) => {

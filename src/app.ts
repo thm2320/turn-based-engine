@@ -16,7 +16,7 @@ app.get('/', (_req: Request, res: Response) => {
 const httpServer: HttpServer = createServer(app);
 const io = socketServer(httpServer);
 export const socketManager = new SocketManager(io);
-socketManager.init();
+socketManager.registerEventHandlers();
 
 httpServer.listen(3000, () => {
   console.log('listening on port 3000');

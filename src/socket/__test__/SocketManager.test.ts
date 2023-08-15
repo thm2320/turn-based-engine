@@ -59,7 +59,7 @@ describe('SockerManager', () => {
     httpServer = createServer();
     io = socketServer(httpServer);
     socketManager = new SocketManager(io);
-    socketManager.init();
+    socketManager.registerEventHandlers();
     httpServer.listen(() => {
       const address = httpServer.address();
       console.log(address);
