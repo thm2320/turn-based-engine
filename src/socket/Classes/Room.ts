@@ -4,13 +4,15 @@ import { Player } from './Player';
 import { CustomGameEvent } from '../SocketEvent';
 
 export class Room {
+  private io: Server;
   name: string;
   players: Player[];
   limit: number;
   game: TurnBasedGame;
   status: 'waiting' | 'playing' | 'finished' = 'waiting';
 
-  constructor(name: string, limit: number, game: TurnBasedGame) {
+  constructor(io: Server, name: string, limit: number, game: TurnBasedGame) {
+    this.io = io;
     this.name = name;
     this.limit = limit;
     this.players = [];
@@ -32,7 +34,10 @@ export class Room {
     }
     this.players.push(player);
     this.game.addPlayer(player);
+    player.socket.join(this.name);
+
     if (this.game.canStart()) {
+      this.registerGameEventHandlers();
       this.status = 'playing';
     }
     return;
@@ -42,6 +47,11 @@ export class Room {
     const removeIndex = this.players.indexOf(player);
     if (removeIndex > -1) {
       this.players.splice(this.players.indexOf(player), 1);
+    }
+    player.socket.leave(this.name);
+    if (this.game.canStart()) {
+      this.game.isCompleted = true;
+      this.status = 'finished';
     }
   };
 
@@ -60,7 +70,7 @@ export class Room {
             console.log(`${player.socket.id} won!`);
             this.status = 'finished';
           }
-          io.in(this.name).emit('update_move', {
+          io.in(this.name).emit(CustomGameEvent.UpdateMove, {
             player: player.socket.id,
             step: steps,
             isFinished: this.status === 'finished',
@@ -72,9 +82,12 @@ export class Room {
     };
   };
 
-  registerGameEventHandlers = (io: Server) => {
+  registerGameEventHandlers = () => {
     this.players.forEach((player) => {
-      player.socket.on(CustomGameEvent.Move, this.handlePlayerMove(io, player));
+      player.socket.on(
+        CustomGameEvent.Move,
+        this.handlePlayerMove(this.io, player)
+      );
     });
   };
 }

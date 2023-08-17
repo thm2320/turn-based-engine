@@ -2,7 +2,7 @@ import { Socket } from 'socket.io';
 
 export class Player {
   socket: Socket;
-  username: string;
+  username: string = '';
 
   constructor(socket: Socket) {
     this.socket = socket;
