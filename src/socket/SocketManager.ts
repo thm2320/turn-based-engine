@@ -1,12 +1,11 @@
 import { Server, Socket } from 'socket.io';
-import { Room } from './Room';
-import { FourChainChess } from '../games/FourChainChess';
-import { Player } from './Player';
-import {
-  SocketEvents,
-  CustomRoomEvent,
-  CustomPlayerEvent,
-} from './SocketEvent';
+import { Room } from './Classes/Room';
+import { Player } from './Classes/Player';
+import { SocketEvent } from './SocketEvent';
+import registerBasicEventHandlers from './SocketHandler/basicEventHandler';
+import registerPlayerEventHandlers from './SocketHandler/playerEventHandler';
+import registerRoomEventHandlers from './SocketHandler/roomEventHandler';
+import { ConnectFourChess } from '@src/games/ConnectFourChess';
 
 export class SocketManager {
   private io: Server;
@@ -17,73 +16,21 @@ export class SocketManager {
     this.io = io;
   }
 
-  init(): void {
-    this.io.on(SocketEvents.Connection, (socket) => {
+  getIoServer(): Server {
+    return this.io;
+  }
+
+  registerEventHandlers(): void {
+    this.io.on(SocketEvent.Connection, (socket) => {
       console.log(`${socket.id} connected`);
 
-      const newPlayer = new Player(socket);
-      this.players.set(socket.id, newPlayer);
-      // const room = this.getAvailableRoom();
-      // room.addPlayer(newPlayer);
-      // room.sendMessage(`${socket.id} joined`);
+      this.addPlayer(socket);
+
       console.log(this.io.of('/').adapter.rooms);
 
-      socket.on(SocketEvents.Disconnecting, () => {
-        socket.rooms.forEach((roomName) => {
-          if (socket.id !== roomName) {
-            this.leaveRoom(socket, roomName);
-          }
-        });
-        this.players.delete(socket.id);
-      });
-
-      socket.on(CustomPlayerEvent.UpdatePlayer, (evtMsg, callback) => {
-        // console.log('CustomPlayerEvent.UpdatePlayer', evtMsg);
-        newPlayer.setUserName(evtMsg.username);
-        if (callback) {
-          callback(newPlayer);
-        }
-      });
-
-      socket.on(CustomRoomEvent.ListRooms, (evtMsg, callback) => {
-        const roomMap = this.getRooms();
-        if (callback) {
-          callback({
-            rooms: Array.from(roomMap.keys()),
-          });
-        }
-      });
-
-      socket.on(CustomRoomEvent.OpenRoom, (evtMsg, callback) => {
-        const { roomName } = evtMsg;
-        this.openRoom(socket, roomName);
-        console.log('After Open', this.io.of('/').adapter.rooms);
-        if (callback) {
-          callback({
-            roomName,
-          });
-        }
-      });
-
-      socket.on(CustomRoomEvent.JoinRoom, (evtMsg, callback) => {
-        const { roomName } = evtMsg;
-        this.joinRoom(socket, roomName);
-        console.log('After Join', this.io.of('/').adapter.rooms);
-        if (callback) {
-          callback({
-            roomName,
-          });
-        }
-      });
-
-      socket.on(CustomRoomEvent.LeaveRoom, (evtMsg, callback) => {
-        const { roomName } = evtMsg;
-        this.leaveRoom(socket, roomName);
-        console.log('After Leave', this.io.of('/').adapter.rooms);
-        callback({
-          roomName,
-        });
-      });
+      registerBasicEventHandlers(this, socket);
+      registerPlayerEventHandlers(this, socket);
+      registerRoomEventHandlers(this, socket);
     });
   }
 
@@ -91,48 +38,58 @@ export class SocketManager {
     return this.players;
   };
 
+  addPlayer = (socket: Socket) => {
+    const newPlayer = new Player(socket);
+    this.players.set(socket.id, newPlayer);
+  };
+
+  updatePlayer = (socket: Socket, { username }: { username: string }) => {
+    const player = this.getPlayers().get(socket.id);
+    player?.setUserName(username);
+    return player;
+  };
+
+  removePlayer = (socket: Socket) => {
+    this.players.delete(socket.id);
+  };
+
   getRooms = () => {
-    // console.log(this.io.of('/').adapter.rooms);
     return this.rooms;
   };
 
   openRoom = (socket: Socket, roomName: string) => {
-    let room = this.rooms.get(roomName);
+    let room = this.getRooms().get(roomName);
     if (!room) {
-      room = new Room(this.io, roomName, 2, new FourChainChess());
-      this.rooms.set(roomName, room);
+      room = new Room(this.getIoServer(), roomName, 2, new ConnectFourChess());
+      this.getRooms().set(roomName, room);
     }
-    const player = this.players.get(socket.id);
+    const player = this.getPlayers().get(socket.id);
     if (player) {
       player.socket.join(roomName);
       room.addPlayer(player);
     }
-    // console.log(this.io.of('/').adapter.rooms);
-    return room;
+    console.log('After OpenRoom', this.io.of('/').adapter.rooms);
   };
 
   joinRoom = (socket: Socket, roomName: string) => {
-    const room = this.rooms.get(roomName);
-    const player = this.players.get(socket.id);
+    const room = this.getRooms().get(roomName);
+    const player = this.getPlayers().get(socket.id);
     if (player && room) {
-      player.socket.join(roomName);
       room.addPlayer(player);
     }
-    // console.log(this.io.of('/').adapter.rooms);
-    return room;
+    console.log('After JoinRoom', this.io.of('/').adapter.rooms);
   };
 
   leaveRoom = (socket: Socket, roomName: string) => {
     const room = this.rooms.get(roomName);
     const player = this.players.get(socket.id);
     if (player && room) {
-      player.socket.leave(roomName);
       room.removePlayer(player);
       if (room.players.length === 0) {
         this.rooms.delete(roomName);
       }
     }
-    // console.log(this.io.of('/').adapter.rooms);
+    console.log('After LeaveRoom', this.io.of('/').adapter.rooms);
     return room;
   };
 }

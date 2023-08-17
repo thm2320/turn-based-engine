@@ -1,10 +1,10 @@
-import { TurnBasedGame } from '../games/TurnBasedGame';
+import { TurnBasedGame } from '../../games/TurnBasedGame';
 import { Server } from 'socket.io';
 import { Player } from './Player';
-import { CustomGameEvent } from './SocketEvent';
+import { CustomGameEvent } from '../SocketEvent';
 
 export class Room {
-  io: Server;
+  private io: Server;
   name: string;
   players: Player[];
   limit: number;
@@ -34,8 +34,10 @@ export class Room {
     }
     this.players.push(player);
     this.game.addPlayer(player);
+    player.socket.join(this.name);
+
     if (this.game.canStart()) {
-      this.setUpListeners();
+      this.registerGameEventHandlers();
       this.status = 'playing';
     }
     return;
@@ -46,38 +48,46 @@ export class Room {
     if (removeIndex > -1) {
       this.players.splice(this.players.indexOf(player), 1);
     }
+    player.socket.leave(this.name);
+    if (this.game.canStart()) {
+      this.game.isCompleted = true;
+      this.status = 'finished';
+    }
   };
 
   isFull = () => {
     return this.players.length >= this.limit;
   };
 
-  sendMessage = (msg: string) => {
-    console.log(`room sends msg ${msg}`);
-    this.io.in(this.name).emit('message', msg);
+  handlePlayerMove = (io: Server, player: Player) => {
+    return (evtMsg: any, callback: Function) => {
+      const steps = evtMsg;
+      if (this.status === 'playing') {
+        try {
+          console.log(`${player.socket.id} move step ${steps}`);
+          this.game.move(player, steps);
+          if (this.game.getIsCompleted()) {
+            console.log(`${player.socket.id} won!`);
+            this.status = 'finished';
+          }
+          io.in(this.name).emit(CustomGameEvent.UpdateMove, {
+            player: player.socket.id,
+            step: steps,
+            isFinished: this.status === 'finished',
+          });
+        } catch (e: any) {
+          console.log(e);
+        }
+      }
+    };
   };
 
-  setUpListeners = () => {
+  registerGameEventHandlers = () => {
     this.players.forEach((player) => {
-      player.socket.on(CustomGameEvent.Move, (steps) => {
-        if (this.status === 'playing') {
-          try {
-            console.log(`${player.socket.id} move step ${steps}`);
-            this.game.move(player, steps);
-            if (this.game.getIsCompleted()) {
-              console.log(`${player.socket.id} won!`);
-              this.status = 'finished';
-            }
-            this.io.in(this.name).emit('update_move', {
-              player: player.socket.id,
-              step: steps,
-              isFinished: this.status === 'finished',
-            });
-          } catch (e: any) {
-            console.log(e);
-          }
-        }
-      });
+      player.socket.on(
+        CustomGameEvent.Move,
+        this.handlePlayerMove(this.io, player)
+      );
     });
   };
 }

@@ -1,11 +1,11 @@
 import { beforeAll, afterAll, describe, expect, test } from '@jest/globals';
-import { FourChainChess } from './FourChainChess';
-import { Player } from '../socket/Player';
+import { ConnectFourChess } from './ConnectFourChess';
+import { Player } from '../socket/Classes/Player';
 import { Server } from 'socket.io';
 import { io as clientIo } from 'socket.io-client';
 import { createServer, Server as HttpServer } from 'http';
 
-describe('FourChainChess Class', () => {
+describe('ConnectFourChess Class', () => {
   let playerA: Player;
   let playerB: Player;
   let io: Server;
@@ -50,7 +50,7 @@ describe('FourChainChess Class', () => {
   });
 
   test('Check win for horizontal left only', () => {
-    let game = new FourChainChess();
+    let game = new ConnectFourChess();
     game.addPlayer(playerA);
     game.addPlayer(playerB);
 
@@ -67,7 +67,7 @@ describe('FourChainChess Class', () => {
   });
 
   test('Check win for horizontal right only', () => {
-    let game = new FourChainChess();
+    let game = new ConnectFourChess();
     game.addPlayer(playerA);
     game.addPlayer(playerB);
     console.log(game.isCompleted);
@@ -85,7 +85,7 @@ describe('FourChainChess Class', () => {
   });
 
   test('Check win for horizontal mixed', () => {
-    let game = new FourChainChess();
+    let game = new ConnectFourChess();
     game.addPlayer(playerA);
     game.addPlayer(playerB);
     console.log(game.isCompleted);
@@ -109,7 +109,7 @@ describe('FourChainChess Class', () => {
   -OXOX-X
   */
   test('Check win for diagonal up in order', () => {
-    let game = new FourChainChess();
+    let game = new ConnectFourChess();
     game.addPlayer(playerA);
     game.addPlayer(playerB);
     console.log(game.isCompleted);
@@ -131,7 +131,7 @@ describe('FourChainChess Class', () => {
   });
 
   test('Check win for diagonal up mixed order', () => {
-    let game = new FourChainChess();
+    let game = new ConnectFourChess();
     game.addPlayer(playerA);
     game.addPlayer(playerB);
     console.log(game.isCompleted);
@@ -159,7 +159,7 @@ describe('FourChainChess Class', () => {
   -XOXO-X
   */
   test('Check win for diagonal down', () => {
-    let game = new FourChainChess();
+    let game = new ConnectFourChess();
     game.addPlayer(playerA);
     game.addPlayer(playerB);
     console.log(game.isCompleted);
@@ -181,7 +181,7 @@ describe('FourChainChess Class', () => {
   });
 
   test('Check win for vertical', () => {
-    let game = new FourChainChess();
+    let game = new ConnectFourChess();
     game.addPlayer(playerA);
     game.addPlayer(playerB);
     console.log(game.isCompleted);

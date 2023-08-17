@@ -1,4 +1,4 @@
-export enum SocketEvents {
+export enum SocketEvent {
   Connection = 'connection',
   Disconnecting = 'disconnecting',
   Disconnect = 'disconnect',
